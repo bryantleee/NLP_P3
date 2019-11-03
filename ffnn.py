@@ -11,6 +11,8 @@ import time
 from tqdm import tqdm
 from data_loader import fetch_data
 
+
+
 unk = '<UNK>'
 # Consult the PyTorch documentation for information on the functions used below:
 # https://pytorch.org/docs/stable/torch.html
@@ -20,7 +22,7 @@ class FFNN(nn.Module):
 			self.h = h
 			self.W1 = nn.Linear(input_dim, h)
 			self.activation = nn.ReLU() # The rectified linear unit; one valid choice of activation function
-			self.W2 = nn.Linear(h, h)
+			self.W2 = nn.Linear(h, 5) #previously self.W2 = nn.Linear(h, 5)
 			# The below two lines are not a source for an error
 			self.softmax = nn.LogSoftmax() # The softmax function that converts vectors into probability distributions; computes log probabilities for computational benefits
 			self.loss = nn.NLLLoss() # The cross-entropy/negative log likelihood loss taught in class
@@ -31,7 +33,7 @@ class FFNN(nn.Module):
 	def forward(self, input_vector):
 		# The z_i are just there to record intermediary computations for your clarity
 		z1 = self.W1(input_vector)
-		z2 = self.W2(z1)
+		z2 = self.W2(self.activation(z1)) #previously z2 = self.W2(z1)
 		predicted_vector = self.softmax(self.activation(z2))
 		return predicted_vector
 
@@ -84,7 +86,6 @@ def main(hidden_dim, number_of_epochs):
 	train_data = convert_to_vector_representation(train_data, word2index)
 	valid_data = convert_to_vector_representation(valid_data, word2index)
 	print("Vectorized data")
-
 	model = FFNN(input_dim = len(vocab), h = hidden_dim)
 	optimizer = optim.SGD(model.parameters(),lr=0.01, momentum=0.9) # This network is trained by traditional (batch) gradient descent; ignore that this says 'SGD'
 	print("Training for {} epochs".format(number_of_epochs))
@@ -103,7 +104,7 @@ def main(hidden_dim, number_of_epochs):
 			correct += int(predicted_label == gold_label)
 			total += 1
 			loss = model.compute_Loss(predicted_vector.view(1,-1), torch.tensor([gold_label]))
-		loss.backward()
+			loss.backward() #previously outside loop
 		optimizer.step()
 		print("Training completed for epoch {}".format(epoch + 1))
 		print("Training accuracy for epoch {}: {}".format(epoch + 1, correct / total))
@@ -120,8 +121,8 @@ def main(hidden_dim, number_of_epochs):
 			correct += int(predicted_label == gold_label)
 			total += 1
 			loss = model.compute_Loss(predicted_vector.view(1,-1), torch.tensor([gold_label]))
-		loss.backward()
-		optimizer.step()
+		#previously loss.backward()
+		# optimizer.step()
 		print("Validation completed for epoch {}".format(epoch + 1))
 		print("Validation accuracy for epoch {}: {}".format(epoch + 1, correct / total))
 		print("Validation time for this epoch: {}".format(time.time() - start_time))
