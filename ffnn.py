@@ -11,6 +11,8 @@ import time
 from tqdm import tqdm
 from data_loader import fetch_data
 
+
+
 unk = '<UNK>'
 # Consult the PyTorch documentation for information on the functions used below:
 # https://pytorch.org/docs/stable/torch.html
@@ -31,7 +33,7 @@ class FFNN(nn.Module):
 	def forward(self, input_vector):
 		# The z_i are just there to record intermediary computations for your clarity
 		z1 = self.W1(input_vector)
-		z2 = self.W2(self.activation(z1)) #error should be put through two different layers...
+		z2 = self.W2(self.activation(z1)) #previously z2 = self.W2(z1)
 		predicted_vector = self.softmax(self.activation(z2))
 		return predicted_vector
 
@@ -84,7 +86,6 @@ def main(hidden_dim, number_of_epochs):
 	train_data = convert_to_vector_representation(train_data, word2index)
 	valid_data = convert_to_vector_representation(valid_data, word2index)
 	print("Vectorized data")
-
 	model = FFNN(input_dim = len(vocab), h = hidden_dim)
 	optimizer = optim.SGD(model.parameters(),lr=0.01, momentum=0.9)
 	print("Training for {} epochs".format(number_of_epochs))
@@ -141,7 +142,7 @@ def main(hidden_dim, number_of_epochs):
 					loss = example_loss
 				else:
 					loss += example_loss
-			loss = loss / minibatch_size
+			# loss = loss / minibatch_size
 			# loss.backward()
 			# optimizer.step()
 		print("Validation completed for epoch {}".format(epoch + 1))
