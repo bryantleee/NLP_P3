@@ -6,10 +6,14 @@ import torch.optim as optim
 import math
 import random
 import os
-
 import time
 from tqdm import tqdm
 from data_loader import fetch_data
+
+#Our stuff we imported
+from gensim.models import Word2Vec
+from collections import Counter
+
 
 unk = '<UNK>'
 
@@ -36,9 +40,17 @@ class RNN(nn.Module):
 # You may find the functions make_vocab() and make_indices from ffnn.py useful; you are free to copy them directly (or call those functions from this file)
 
 
-
 def main(): # Add relevant parameters
 	train_data, valid_data = fetch_data() # X_data is a list of pairs (document, y); y in {0,1,2,3,4}
+	
+	counts = Counter()
+	review_list = []
+	for t in train_data:
+		review_list.append(t[0])
+		counts.update(t[0])
+
+	model = Word2Vec(review_list, size=128)
+	
 
 	# Think about the type of function that an RNN describes. To apply it, you will need to convert the text data into vector representations.
 	# Further, think about where the vectors will come from. There are 3 reasonable choices:
