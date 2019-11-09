@@ -25,6 +25,7 @@ class RNN(nn.Module):
 		# Fill in relevant parameters
 		# Ensure parameters are initialized to small values, see PyTorch documentation for guidance
 		self.rnn = nn.RNN(128, hidden_dimension_size, hidden_layers, batch_first=True)
+		self.Linear = nn.Linear(hidden_dimension_size, 5)
 		self.softmax = nn.LogSoftmax()
 		self.loss = nn.NLLLoss()
 		
@@ -35,10 +36,10 @@ class RNN(nn.Module):
 	def forward(self, input_, h): 
 		#begin code
 		output, h_n = self.rnn(input_, h)
-
-		predicted_vector = self.softmax(output) # Remember to include the predicted unnormalized scores which should be normalized into a (log) probability distribution
+		distribution = self.Linear(output[0][-1])
+		predicted_vector = self.softmax(distribution) # Remember to include the predicted unnormalized scores which should be normalized into a (log) probability distribution
 		#end code
-		return predicted_vector, h_n
+		return predicted_vector
 
 # You may find the functions make_vocab() and make_indices from ffnn.py useful; you are free to copy them directly (or call those functions from this file)
 
