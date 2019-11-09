@@ -13,29 +13,32 @@ from data_loader import fetch_data
 #Our stuff we imported
 from gensim.models import Word2Vec
 from collections import Counter
+import numpy as np
 
 
 unk = '<UNK>'
 
 
 class RNN(nn.Module):
-	def __init__(self): # Add relevant parameters
+	def __init__(self, hidden_dimension_size, hidden_layers): # Add relevant parameters
 		super(RNN, self).__init__()
 		# Fill in relevant parameters
 		# Ensure parameters are initialized to small values, see PyTorch documentation for guidance
+		self.rnn = nn.RNN(128, hidden_dimension_size, hidden_layers, batch_first=True)
 		self.softmax = nn.LogSoftmax()
 		self.loss = nn.NLLLoss()
+		
 
 	def compute_Loss(self, predicted_vector, gold_label):
 		return self.loss(predicted_vector, gold_label)	
 
-	def forward(self, inputs): 
+	def forward(self, input_, h): 
 		#begin code
+		output, h_n = self.rnn(input_, h)
 
-
-		predicted_vector = self.softmax() # Remember to include the predicted unnormalized scores which should be normalized into a (log) probability distribution
+		predicted_vector = self.softmax(output) # Remember to include the predicted unnormalized scores which should be normalized into a (log) probability distribution
 		#end code
-		return predicted_vector
+		return predicted_vector, h_n
 
 # You may find the functions make_vocab() and make_indices from ffnn.py useful; you are free to copy them directly (or call those functions from this file)
 
@@ -49,7 +52,22 @@ def main(): # Add relevant parameters
 		review_list.append(t[0])
 		counts.update(t[0])
 
-	model = Word2Vec(review_list, size=128)
+	model = Word2Vec(review_list, size=128, min_count=1)
+
+	#create list of word embeddings for each review
+	all_embeddings = []
+	for t in train_data:
+		all_embeddings.append([model[word] for word in t[0]])
+	reshaped_embeddings = [np.stack(review_embeddings, axis=0) for review_embeddings in all_embeddings]
+
+	#reshape embeddings
+	reshaped_embeddings = []
+	for review_embeddings in all_embeddings:
+		temp_array = np.stack(review_embeddings, axis=0)
+		temp_array = np.expand_dims(temp_array, axis=0)
+		reshaped_embeddings.append(torch.from_numpy(temp_array).shape)
+    	
+
 	
 
 	# Think about the type of function that an RNN describes. To apply it, you will need to convert the text data into vector representations.
@@ -59,7 +77,7 @@ def main(): # Add relevant parameters
 	# 3) You do the same as 2) but you train (this is called fine-tuning) the pretrained embeddings further. 
 	# Option 3 will be the most time consuming, so we do not recommend starting with this
 
-	model = RNN() # Fill in parameters
+	# model = RNN() # Fill in parameters
 	optimizer = optim.SGD(model.parameters()) 
 
 	while not stopping_condition: # How will you decide to stop training and why
