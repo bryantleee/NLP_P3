@@ -33,9 +33,11 @@ class RNN(nn.Module):
 	def compute_Loss(self, predicted_vector, gold_label):
 		return self.loss(predicted_vector, gold_label)	
 
-	def forward(self, input_, h): 
+	def forward(self, inputs, h): 
 		#begin code
-		output, h_n = self.rnn(input_, h)
+
+		output, h_n = self.rnn(inputs, h)
+
 		distribution = self.Linear(output[0][-1])
 		predicted_vector = self.softmax(distribution) # Remember to include the predicted unnormalized scores which should be normalized into a (log) probability distribution
 		#end code
@@ -66,9 +68,13 @@ def main(): # Add relevant parameters
 	for review_embeddings in all_embeddings:
 		temp_array = np.stack(review_embeddings, axis=0)
 		temp_array = np.expand_dims(temp_array, axis=0)
-		reshaped_embeddings.append(torch.from_numpy(temp_array).shape)
-    	
+		reshaped_embeddings.append(torch.from_numpy(temp_array))
+	
+	h0 = torch.zeros(2, 1, 64)
+	model = RNN(64, 2) # Fill in parameters
+	print(model(reshaped_embeddings[0], h0))
 
+	
 	
 
 	# Think about the type of function that an RNN describes. To apply it, you will need to convert the text data into vector representations.
@@ -78,16 +84,16 @@ def main(): # Add relevant parameters
 	# 3) You do the same as 2) but you train (this is called fine-tuning) the pretrained embeddings further. 
 	# Option 3 will be the most time consuming, so we do not recommend starting with this
 
-	# model = RNN() # Fill in parameters
-	optimizer = optim.SGD(model.parameters()) 
+	
+	# optimizer = optim.SGD(model.parameters()) 
 
-	while not stopping_condition: # How will you decide to stop training and why
-		optimizer.zero_grad()
-		# You will need further code to operationalize training, ffnn.py may be helpful
+	# while not stopping_condition: # How will you decide to stop training and why
+	# 	optimizer.zero_grad()
+	# 	# You will need further code to operationalize training, ffnn.py may be helpful
 
-		predicted_vector = model(input_vector)
-		predicted_label = torch.argmax(predicted_vector)
-		# You may find it beneficial to keep track of training accuracy or training loss; 
+	# 	predicted_vector = model(input_vector)
+	# 	predicted_label = torch.argmax(predicted_vector)
+	# 	# You may find it beneficial to keep track of training accuracy or training loss; 
 
 		# Think about how to update the model and what this entails. Consider ffnn.py and the PyTorch documentation for guidance
 
