@@ -6,7 +6,7 @@ import torch.optim as optim
 import math
 import random
 import os
-from pathlib import Path 
+from pathlib import Path
 import time
 from tqdm import tqdm
 from data_loader import fetch_data
@@ -38,14 +38,14 @@ class FFNN(nn.Module):
 		return predicted_vector
 
 
-# Returns: 
+# Returns:
 # vocab = A set of strings corresponding to the vocabulary
 def make_vocab(data):
 	vocab = set()
 	for document, _ in data:
 		for word in document:
 			vocab.add(word)
-	return vocab 
+	return vocab
 
 
 # Returns:
@@ -58,10 +58,10 @@ def make_indices(vocab):
 	word2index = {}
 	index2word = {}
 	for index, word in enumerate(vocab_list):
-		word2index[word] = index 
-		index2word[index] = word 
+		word2index[word] = index
+		index2word[index] = word
 	vocab.add(unk)
-	return vocab, word2index, index2word 
+	return vocab, word2index, index2word
 
 
 # Returns:
@@ -69,7 +69,7 @@ def make_indices(vocab):
 def convert_to_vector_representation(data, word2index):
 	vectorized_data = []
 	for document, y in data:
-		vector = torch.zeros(len(word2index)) 
+		vector = torch.zeros(len(word2index))
 		for word in document:
 			index = word2index.get(word, word2index[unk])
 			vector[index] += 1
@@ -98,8 +98,8 @@ def main(hidden_dim, number_of_epochs):
 		start_time = time.time()
 		print("Training started for epoch {}".format(epoch + 1))
 		random.shuffle(train_data) # Good practice to shuffle order of training data
-		minibatch_size = 16 
-		N = len(train_data) 
+		minibatch_size = 16
+		N = len(train_data)
 		for minibatch_index in tqdm(range(N // minibatch_size)):
 			optimizer.zero_grad()
 			loss = None
@@ -125,27 +125,26 @@ def main(hidden_dim, number_of_epochs):
 		total = 0
 		start_time = time.time()
 		print("Validation started for epoch {}".format(epoch + 1))
-		random.shuffle(train_data) # Good practice to shuffle order of training data
-		minibatch_size = 16 
-		N = len(train_data) 
+		random.shuffle(valid_data) # Good practice to shuffle order of training data
+		minibatch_size = 16
+		N = len(valid_data)
 		for minibatch_index in tqdm(range(N // minibatch_size)):
 			optimizer.zero_grad()
-			loss = None
+			# loss = None
 			for example_index in range(minibatch_size):
-				input_vector, gold_label = train_data[minibatch_index * minibatch_size + example_index]
+				input_vector, gold_label = valid_data[minibatch_index * minibatch_size + example_index]
 				predicted_vector = model(input_vector)
 				predicted_label = torch.argmax(predicted_vector)
 				correct += int(predicted_label == gold_label)
 				total += 1
-				example_loss = model.compute_Loss(predicted_vector.view(1,-1), torch.tensor([gold_label]))
-				if loss is None:
-					loss = example_loss
-				else:
-					loss += example_loss
+				# example_loss = model.compute_Loss(predicted_vector.view(1,-1), torch.tensor([gold_label]))
+				# if loss is None:
+					# loss = example_loss
+				# else:
+					# loss += example_loss
 			# loss = loss / minibatch_size
 			# loss.backward()
 			# optimizer.step()
 		print("Validation completed for epoch {}".format(epoch + 1))
 		print("Validation accuracy for epoch {}: {}".format(epoch + 1, correct / total))
 		print("Validation time for this epoch: {}".format(time.time() - start_time))
-		

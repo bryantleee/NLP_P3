@@ -10,7 +10,7 @@ import time
 from tqdm import tqdm
 from data_loader import fetch_data
 
-#Our stuff we imported
+# Our stuff we imported
 from gensim.models import Word2Vec
 from collections import Counter
 import numpy as np
@@ -20,83 +20,137 @@ unk = '<UNK>'
 
 
 class RNN(nn.Module):
-	def __init__(self, hidden_dimension_size, hidden_layers): # Add relevant parameters
-		super(RNN, self).__init__()
-		# Fill in relevant parameters
-		# Ensure parameters are initialized to small values, see PyTorch documentation for guidance
-		self.rnn = nn.RNN(128, hidden_dimension_size, hidden_layers, batch_first=True)
-		self.Linear = nn.Linear(hidden_dimension_size, 5)
-		self.softmax = nn.LogSoftmax()
-		self.loss = nn.NLLLoss()
-		
+    def __init__(self, hidden_dim, n_layers, embedding_dim, output_dim):  # Add relevant parameters
+        super(RNN, self).__init__()
+        # Fill in relevant parameters
+        # Ensure parameters are initialized to small values, see PyTorch documentation for guidance
 
-	def compute_Loss(self, predicted_vector, gold_label):
-		return self.loss(predicted_vector, gold_label)	
+        self.hidden_dim = hidden_dim
+        self.n_layers = n_layers
+        self.rnn = nn.RNN(embedding_dim, hidden_dim, n_layers, batch_first=True)
+        self.Linear = nn.Linear(hidden_dim, output_dim)
+        self.softmax = nn.LogSoftmax()
+        self.criterion = nn.NLLLoss()
 
-	def forward(self, inputs, h): 
-		#begin code
+    def compute_Loss(self, predicted_vector, gold_label):
+        return self.criterion(predicted_vector, gold_label)
 
-		output, h_n = self.rnn(inputs, h)
+    def forward(self, inputs):
+        # begin code
+        batch_size = inputs.size()[0]
+        print(batch_size)
+        h_0 = torch.zeros(self.n_layers, batch_size, self.hidden_dim)
+        output, h_n = self.rnn(inputs, h_0)
 
-		distribution = self.Linear(output[0][-1])
-		predicted_vector = self.softmax(distribution) # Remember to include the predicted unnormalized scores which should be normalized into a (log) probability distribution
-		#end code
-		return predicted_vector
+        distribution = self.Linear(output[0][-1])
+        # Remember to include the predicted unnormalized scores which should be normalized into a (log) probability distribution
+        predicted_vector = self.softmax(distribution)
+        # end code
+        return predicted_vector
 
 # You may find the functions make_vocab() and make_indices from ffnn.py useful; you are free to copy them directly (or call those functions from this file)
 
 
-def main(): # Add relevant parameters
-	train_data, valid_data = fetch_data() # X_data is a list of pairs (document, y); y in {0,1,2,3,4}
-	
-	counts = Counter()
-	review_list = []
-	for t in train_data:
-		review_list.append(t[0])
-		counts.update(t[0])
+def main(embedding_dim, hidden_dim, n_layers, epochs, output_dim):  # Add relevant parameters
+    # X_data is a list of pairs (document, y); y in {0,1,2,3,4}
+    train_data, valid_data = fetch_data()
 
-	model = Word2Vec(review_list, size=128, min_count=1)
+    counts = Counter()
+    review_list = []
+    for t in train_data:
+        review_list.append(t[0])
+        counts.update(t[0])
 
-	#create list of word embeddings for each review
-	all_embeddings = []
-	for t in train_data:
-		all_embeddings.append([model[word] for word in t[0]])
-	reshaped_embeddings = [np.stack(review_embeddings, axis=0) for review_embeddings in all_embeddings]
+    model = Word2Vec(review_list, size=embedding_dim, min_count=1)
+    # create list of word embeddings for each review
+    all_embeddings = []
+    for t in train_data:
+        all_embeddings.append([model.wv[word] for word in t[0]])
+    reshaped_embeddings = [np.stack(review_embeddings, axis=0)
+                           for review_embeddings in all_embeddings]
 
-	#reshape embeddings
-	reshaped_embeddings = []
-	for review_embeddings in all_embeddings:
-		temp_array = np.stack(review_embeddings, axis=0)
-		temp_array = np.expand_dims(temp_array, axis=0)
-		reshaped_embeddings.append(torch.from_numpy(temp_array))
-	
-	h0 = torch.zeros(2, 1, 64)
-	model = RNN(64, 2) # Fill in parameters
-	print(model(reshaped_embeddings[0], h0))
+    # reshape training data and validation data embeddings and tensorify
+    reshaped_training = []
+    for review_embeddings in all_embeddings:
+        temp_array = np.stack(review_embeddings, axis=0)
+        temp_array = np.expand_dims(temp_array, axis=0)
+        reshaped_training.append(torch.from_numpy(temp_array))
 
-	
-	
+    #TODO: need to reshape embeddings for validation data too (reshaped_training must be built in the same way as reshaped_training)
+    #TODO: also reshaped embeddings must become tuples with y labels attached to be able to shuffle later
+    # so reshaped_training[0] = (tensor{document}, Ylabel)
 
-	# Think about the type of function that an RNN describes. To apply it, you will need to convert the text data into vector representations.
-	# Further, think about where the vectors will come from. There are 3 reasonable choices:
-	# 1) Randomly assign the input to vectors and learn better embeddings during training; see the PyTorch documentation for guidance
-	# 2) Assign the input to vectors using pretrained word embeddings. We recommend any of {Word2Vec, GloVe, FastText}. Then, you do not train/update these embeddings.
-	# 3) You do the same as 2) but you train (this is called fine-tuning) the pretrained embeddings further. 
-	# Option 3 will be the most time consuming, so we do not recommend starting with this
+    model = RNN(hidden_dim, n_layers, embedding_dim, output_dim)  # Fill in parameters
+    # print(model(reshaped_training[0]))
 
-	
-	# optimizer = optim.SGD(model.parameters()) 
+    # Think about the type of function that an RNN describes. To apply it, you will need to convert the text data into vector representations.
+    # Further, think about where the vectors will come from. There are 3 reasonable choices:
+    # 1) Randomly assign the input to vectors and learn better embeddings during training; see the PyTorch documentation for guidance
+    # 2) Assign the input to vectors using pretrained word embeddings. We recommend any of {Word2Vec, GloVe, FastText}. Then, you do not train/update these embeddings.
+    # 3) You do the same as 2) but you train (this is called fine-tuning) the pretrained embeddings further.
+    # Option 3 will be the most time consuming, so we do not recommend starting with this
 
-	# while not stopping_condition: # How will you decide to stop training and why
-	# 	optimizer.zero_grad()
-	# 	# You will need further code to operationalize training, ffnn.py may be helpful
+    optimizer = optim.SGD(model.parameters())
+	for epoch in range(epochs):
+		model.train()
+		optimizer.zero_grad()
+		loss = None
+		correct = 0
+		total = 0
+		start_time = time.time()
+		print("Training started for epoch {}".format(epoch + 1))
+		random.shuffle(reshaped_training) # Good practice to shuffle order of training data
+		minibatch_size = 16
+		N = len(train_data)
+		for minibatch_index in tqdm(range(N // minibatch_size)):
+			optimizer.zero_grad()
+			loss = None
+			for example_index in range(minibatch_size):
+                input_vector, gold_label = reshaped_training[minibatch_index * minibatch_size + example_index]
+				predicted_vector = model(input_vector)
+				predicted_label = torch.argmax(predicted_vector)
+				correct += int(predicted_label == gold_label)
+				total += 1
+				example_loss = model.compute_Loss(predicted_vector.view(1,-1), torch.tensor([gold_label]))
+				if loss is None:
+					loss = example_loss
+				else:
+					loss += example_loss
+			loss = loss / minibatch_size
+			loss.backward()
+			optimizer.step()
+		print("Training completed for epoch {}".format(epoch + 1))
+		print("Training accuracy for epoch {}: {}".format(epoch + 1, correct / total))
+		print("Training time for this epoch: {}".format(time.time() - start_time))
+		loss = None
+		correct = 0
+		total = 0
+		start_time = time.time()
+		print("Validation started for epoch {}".format(epoch + 1))
+		random.shuffle(reshaped_validation) # Good practice to shuffle order of validation data
+		minibatch_size = 16
+		N = len(valid_data)
+		for minibatch_index in tqdm(range(N // minibatch_size)):
+			optimizer.zero_grad()
+			for example_index in range(minibatch_size):
+                input_vector, gold_label = reshaped_validation[minibatch_index * minibatch_size + example_index]
+				predicted_vector = model(input_vector)
+				predicted_label = torch.argmax(predicted_vector)
+				correct += int(predicted_label == gold_label)
+				total += 1
+		print("Validation completed for epoch {}".format(epoch + 1))
+		print("Validation accuracy for epoch {}: {}".format(epoch + 1, correct / total))
+		print("Validation time for this epoch: {}".format(time.time() - start_time))
 
-	# 	predicted_vector = model(input_vector)
-	# 	predicted_label = torch.argmax(predicted_vector)
-	# 	# You may find it beneficial to keep track of training accuracy or training loss; 
+            # while not stopping_condition: # How will you decide to stop training and why
+            # 	optimizer.zero_grad()
+            # 	# You will need further code to operationalize training, ffnn.py may be helpful
+            #
+            # 	predicted_vector = model(input_vector)
+            # 	predicted_label = torch.argmax(predicted_vector)
+            # 	# You may find it beneficial to keep track of training accuracy or training loss;
 
-		# Think about how to update the model and what this entails. Consider ffnn.py and the PyTorch documentation for guidance
+            # Think about how to update the model and what this entails. Consider ffnn.py and the PyTorch documentation for guidance
 
-		# You will need to validate your model. All results for Part 3 should be reported on the validation set. 
-		# Consider ffnn.py; making changes to validation if you find them necessary
-
+            # You will need to validate your model. All results for Part 3 should be reported on the validation set.
+            # Consider ffnn.py; making changes to validation if you find them necessary
