@@ -15,6 +15,7 @@ from gensim.models import Word2Vec
 from collections import Counter
 import numpy as np
 import torch.backends.cudnn as cudnn
+import adabound
 
 
 unk = '<UNK>'
@@ -29,6 +30,7 @@ class RNN(nn.Module):
         self.hidden_dim = hidden_dim
         self.n_layers = n_layers
         self.rnn = nn.RNN(embedding_dim, hidden_dim, n_layers, batch_first=True)
+        # self.lstm = nn.LSTM(embedding_dim, hidden_dim, n_layers, batch_first=True)
         self.Linear = nn.Linear(hidden_dim, output_dim)
         self.softmax = nn.LogSoftmax(dim=0)
         self.criterion = nn.NLLLoss()
@@ -40,7 +42,9 @@ class RNN(nn.Module):
         # begin code
         batch_size = inputs.size()[0]
         h_0 = torch.zeros(self.n_layers, batch_size, self.hidden_dim)
-        output, h_n = self.rnn(inputs, h_0)
+        output, _ = self.rnn(inputs, h_0)
+        # c_0 = h_0.clone()
+        # output, _ = self.lstm(inputs)
 
         distribution = self.Linear(output[0][-1])
         # Remember to include the predicted unnormalized scores which should be normalized into a (log) probability distribution
@@ -51,7 +55,7 @@ class RNN(nn.Module):
 # You may find the functions make_vocab() and make_indices from ffnn.py useful; you are free to copy them directly (or call those functions from this file)
 
 
-def main(embedding_dim, hidden_dim, n_layers, epochs, output_dim):  # Add relevant parameters
+def main(name, embedding_dim, hidden_dim, n_layers, epochs, output_dim):  # Add relevant parameters
 
     # X_data is a list of pairs (document, y); y in {0,1,2,3,4}
     train_data, valid_data = fetch_data()
@@ -102,7 +106,9 @@ def main(embedding_dim, hidden_dim, n_layers, epochs, output_dim):  # Add releva
     # 3) You do the same as 2) but you train (this is called fine-tuning) the pretrained embeddings further.
     # Option 3 will be the most time consuming, so we do not recommend starting with this
 
-    optimizer = optim.SGD(model.parameters(), lr=0.01, momentum=0.9)
+    optimizer = optim.SGD(model.parameters(), lr=0.0003, momentum=0.9)
+    # optimizer = optim.Adam(model.parameters(), lr=0.0003)
+    # optimizer = adabound.AdaBound(model.parameters(), lr=1e-3, final_lr=0.1)
     for epoch in range(epochs):
         model.train()
         optimizer.zero_grad()
@@ -134,36 +140,41 @@ def main(embedding_dim, hidden_dim, n_layers, epochs, output_dim):  # Add releva
         print("Training completed for epoch {}".format(epoch + 1))
         print("Training accuracy for epoch {}: {}".format(epoch + 1, correct / total))
         print("Training time for this epoch: {}".format(time.time() - start_time))
-        loss = None
         correct = 0
         total = 0
         start_time = time.time()
         print("Validation started for epoch {}".format(epoch + 1))
-        # Good practice to shuffle order of validation data
-        random.shuffle(validation_samples)
-        minibatch_size = 16
+        random.shuffle(validation_samples) # Good practice to shuffle order of validation data
+        # minibatch_size = 16
+        # for minibatch_index in tqdm(range(N // minibatch_size)):
+        #     optimizer.zero_grad()
+        #     for example_index in range(minibatch_size):
+        #         input_vector, gold_label = validation_samples[minibatch_index * minibatch_size + example_index]
         N = len(validation_samples)
-        for minibatch_index in tqdm(range(N // minibatch_size)):
-            optimizer.zero_grad()
-            for example_index in range(minibatch_size):
-                input_vector, gold_label = validation_samples[minibatch_index * minibatch_size + example_index]
-                predicted_vector = model(input_vector)
-                predicted_label = torch.argmax(predicted_vector)
-                correct += int(predicted_label == gold_label)
-                total += 1
+        optimizer.zero_grad()
+        for index in tqdm(range(N)):
+            input_vector, gold_label = validation_samples[index]
+            predicted_vector = model(input_vector)
+            predicted_label = torch.argmax(predicted_vector)
+            correct += int(predicted_label == gold_label)
+            total += 1
         print("Validation completed for epoch {}".format(epoch + 1))
         print("Validation accuracy for epoch {}: {}".format(epoch + 1, correct / total))
         print("Validation time for this epoch: {}".format(time.time() - start_time))
 
-            # while not stopping_condition: # How will you decide to stop training and why
-            # 	optimizer.zero_grad()
-            # 	# You will need further code to operationalize training, ffnn.py may be helpful
-            #
-            # 	predicted_vector = model(input_vector)
-            # 	predicted_label = torch.argmax(predicted_vector)
-            # 	# You may find it beneficial to keep track of training accuracy or training loss;
+    current = os.curdir
+    models = os.path.join(current, 'models')
+    PATH = os.path.join(models, name)
+    torch.save(model.state_dict(), PATH)
+        # while not stopping_condition: # How will you decide to stop training and why
+        # 	optimizer.zero_grad()
+        # 	# You will need further code to operationalize training, ffnn.py may be helpful
+        #
+        # 	predicted_vector = model(input_vector)
+        # 	predicted_label = torch.argmax(predicted_vector)
+        # 	# You may find it beneficial to keep track of training accuracy or training loss;
 
-            # Think about how to update the model and what this entails. Consider ffnn.py and the PyTorch documentation for guidance
+        # Think about how to update the model and what this entails. Consider ffnn.py and the PyTorch documentation for guidance
 
-            # You will need to validate your model. All results for Part 3 should be reported on the validation set.
-            # Consider ffnn.py; making changes to validation if you find them necessary
+        # You will need to validate your model. All results for Part 3 should be reported on the validation set.
+        # Consider ffnn.py; making changes to validation if you find them necessary
