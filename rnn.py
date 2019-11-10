@@ -164,7 +164,7 @@ def main(name, embedding_dim, hidden_dim, n_layers, epochs, output_dim):  # Add 
 
     current = os.curdir
     models = os.path.join(current, 'models')
-    PATH = os.path.join(models, name)
+    PATH = os.path.join(models, name + '.pt')
     torch.save(model.state_dict(), PATH)
         # while not stopping_condition: # How will you decide to stop training and why
         # 	optimizer.zero_grad()
