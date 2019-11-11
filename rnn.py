@@ -26,15 +26,17 @@ unk = '<UNK>'
 
 
 class RNN(nn.Module):
-    def __init__(self, hidden_dim, n_layers, embedding_dim):  # Add relevant parameters
+    def __init__(self, hidden_dim, n_layers, embedding_dim, RNNcore):  # Add relevant parameters
         super(RNN, self).__init__()
         # Fill in relevant parameters
         # Ensure parameters are initialized to small values, see PyTorch documentation for guidance
-
+        self.RNNcore = RNNcore
         self.hidden_dim = hidden_dim
         self.n_layers = n_layers
-        # self.rnn = nn.RNN(embedding_dim, hidden_dim, n_layers, batch_first=True)
-        self.lstm = nn.LSTM(embedding_dim, hidden_dim, n_layers, batch_first=True)
+        if RNNcore:
+            self.rnn = nn.RNN(embedding_dim, hidden_dim, n_layers, batch_first=True)
+        else:
+            self.lstm = nn.LSTM(embedding_dim, hidden_dim, n_layers, batch_first=True)
         self.Linear = nn.Linear(hidden_dim, 5)
         self.softmax = nn.LogSoftmax(dim=0)
         self.criterion = nn.NLLLoss()
@@ -56,9 +58,11 @@ class RNN(nn.Module):
         # begin code
         batch_size = inputs.size()[0]
         h_0 = torch.zeros(self.n_layers, batch_size, self.hidden_dim)
-        # output, h_n = self.rnn(inputs, h_0)
-        c_0 = h_0.clone()
-        output, h_n = self.lstm(inputs, (h_0, c_0))
+        if self.RNNcore:
+            output, h_n = self.rnn(inputs, h_0)
+        else:
+            c_0 = h_0.clone()
+            output, h_n = self.lstm(inputs, (h_0, c_0))
 
         distribution = self.Linear(output[0][-1])
         predicted_vector = self.softmax(distribution)
@@ -71,7 +75,7 @@ class RNN(nn.Module):
 # You may find the functions make_vocab() and make_indices from ffnn.py useful; you are free to copy them directly (or call those functions from this file)
 
 
-def main(name, embedding_dim, hidden_dim, n_layers, epochs):  # Add relevant parameters
+def main(name, embedding_dim, hidden_dim, n_layers, epochs, RNNcore):  # Add relevant parameters
     # X_data is a list of pairs (document, y); y in {0,1,2,3,4}
     train_data, valid_data = fetch_data()
 
@@ -107,13 +111,13 @@ def main(name, embedding_dim, hidden_dim, n_layers, epochs):  # Add relevant par
         expanded_embedding = np.expand_dims(stacked_embedding, axis=0)
         embedding_tensor = torch.from_numpy(expanded_embedding)
         # embedding_tensor = torch.from_numpy(stacked_embedding)
-        valid_sample = (embedding_tensor, t[1])
+        valid_sample = (embedding_tensor, v[1])
         validation_samples.append(valid_sample)
     # TODO: need to reshape embeddings for validation data too (reshaped_training must be built in the same way as reshaped_training)
     # TODO: also reshaped embeddings must become tuples with y labels attached to be able to shuffle later
     # so reshaped_training[0] = (tensor{document}, Ylabel)
 
-    model = RNN(hidden_dim, n_layers, embedding_dim)  # Fill in parameters
+    model = RNN(hidden_dim, n_layers, embedding_dim, RNNcore)  # Fill in parameters
     # print(model(reshaped_training[0]))
 
     # Think about the type of function that an RNN describes. To apply it, you will need to convert the text data into vector representations.
@@ -123,11 +127,11 @@ def main(name, embedding_dim, hidden_dim, n_layers, epochs):  # Add relevant par
     # 3) You do the same as 2) but you train (this is called fine-tuning) the pretrained embeddings further.
     # Option 3 will be the most time consuming, so we do not recommend starting with this
 
-    optimizer = optim.SGD(model.parameters(), lr=3e-3, momentum=0.9)
     # optimizer = optim.SGD(model.parameters(), lr=3e-3, momentum=0.9)
+    # optimizer = optim.SGD(model.parameters(), lr=3e-4, momentum=0.9)
     # optimizer = optim.Adam(model.parameters(), lr=0.3e-3)
     # optimizer = adabound.AdaBound(model.parameters(), lr=3e-4, final_lr=3e-3)
-    # optimizer = optim.RMSprop(model.parameters(), lr=0.3e-3)
+    optimizer = optim.RMSprop(model.parameters(), lr=0.3e-4)
     for epoch in range(epochs):
         model.train()
         optimizer.zero_grad()

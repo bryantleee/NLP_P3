@@ -9,12 +9,13 @@ parser.add_argument('--embedding', type=int, default=64, help='Embedding dimensi
 parser.add_argument('--hidden', type=int, default=32, help='Hiddem dimension size')
 parser.add_argument('--layers', type=int, default=1, help='Number of hidden layers')
 parser.add_argument('--epochs', type=int, default=10, help='Number of training epochs')
+parser.add_argument('--RNNcore', type=bool, default=True, help='Whether to use RNN as core or LSTM')
 
 args = parser.parse_args()
 
 def main():
     if args.model == 'RNN':
-        rnn_main(args.name, args.embedding, args.hidden, args.layers, args.epochs)
+        rnn_main(args.name, args.embedding, args.hidden, args.layers, args.epochs, args.RNNcore)
     elif args.model == 'FFNN':
         ffnn_main(args.name, hidden_dim=args.hidden, number_of_epochs=args.epochs, n_layers=args.layers)
     else:
