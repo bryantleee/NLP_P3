@@ -71,15 +71,6 @@ print('models succesfuly loaded')
 train_data, valid_data = fetch_data()
 wv_model = Word2Vec.load("word2vec.model")
 
-training_samples = []
-for t in train_data:
-    embedding_list = [wv_model.wv[word] for word in t[0]]
-    stacked_embedding = np.stack(embedding_list, axis=0)
-    expanded_embedding = np.expand_dims(stacked_embedding, axis=0)
-    embedding_tensor = torch.from_numpy(expanded_embedding)
-    train_sample = (embedding_tensor, t[1])
-    training_samples.append(train_sample)
-
 validation_samples = []
 for v in valid_data:
     embedding_list = [wv_model.wv[word] for word in v[0]]
@@ -112,8 +103,8 @@ N = len(validation_samples)
 
 print('starting validation counts')
 
-rnn_average_dist = [[], [], []]
-ffnn_average_dist = [[], [], []]
+rnn_average_dist = [0, 0, 0]
+ffnn_average_dist = [0, 0, 0]
 
 for i, batch in enumerate(batches): 
     total = 0
@@ -134,6 +125,7 @@ for i, batch in enumerate(batches):
 
         rnn_average_dist[i] += abs(gold_label - predicted_label_rnn.item())
         ffnn_average_dist[i] += abs(gold_label - predicted_label_ffnn.item())
+
 
         if predicted_label_ffnn == gold_label and predicted_label_rnn == gold_label:
             both_right[i].append(index)
