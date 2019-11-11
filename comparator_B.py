@@ -143,6 +143,9 @@ print('starting validation counts')
 correct_outputs = [[], [], [], []]
 incorrect_outputs = [[], [], [], []]
 
+rating_sums = [[0, 0, 0, 0, 0], [0, 0, 0, 0, 0], [0, 0, 0, 0, 0], [0, 0, 0, 0, 0]]
+rating_totals = [[0, 0, 0, 0, 0], [0, 0, 0, 0, 0], [0, 0, 0, 0, 0], [0, 0, 0, 0, 0]]
+
 for i, model in enumerate(models):
     total = 0
     correct = 0
@@ -175,7 +178,9 @@ for i, model in enumerate(models):
         # elif predicted_label_ffnn != gold_label and predicted_label_rnn == gold_label:
         #     rnn_right_ffnn_wrong[i].append(index)
         #     rnn_correct += 1
+        rating_totals[i][gold_label] += 1
         if int(predicted_label == gold_label) == 1:
+            rating_sums[i][gold_label] += 1
             correct_outputs[i].append(index)
         else:
             incorrect_outputs[i].append(index)
@@ -185,8 +190,9 @@ for i, model in enumerate(models):
     print("Validation accuracy for model {}: {}".format(i, correct / total))
     # print("Validation accuracy for ffnn, batch {}: {}".format(i , correct / total))
 
-
-
+for i in range(4):
+    for j in range(5):
+        print('Model {} rating {} percent correct: {}'.format(i, j, rating_sums[i][j]/rating_totals[i][j]))
 # rnn_average_distances = [average_sum/N for average_sum in rnn_average_dist]
 # ffnn_average_distances = [average_sum/N for average_sum in ffnn_average_dist]
 #
