@@ -18,7 +18,8 @@ def main():
     elif args.model == 'FFNN':
         ffnn_main(args.name, hidden_dim=args.hidden, number_of_epochs=args.epochs)
     else:
-        return 'Incompatible model declaration'
+        print('Incompatible model declaration')
+        return
 
 
 if __name__ == '__main__':

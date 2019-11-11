@@ -22,6 +22,7 @@ unk = '<UNK>'
 
 
 # New base settings: hidden=32, layers=1, epochs=10, embedding=64
+# NOTE: try non-linearity
 
 
 class RNN(nn.Module):
