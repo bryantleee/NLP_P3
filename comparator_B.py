@@ -140,6 +140,9 @@ print('starting validation counts')
 # rnn_average_dist = [[], [], []]
 # ffnn_average_dist = [[], [], []]
 
+correct_outputs = [[], [], [], []]
+incorrect_outputs = [[], [], [], []]
+
 for i, model in enumerate(models):
     total = 0
     correct = 0
@@ -172,11 +175,17 @@ for i, model in enumerate(models):
         # elif predicted_label_ffnn != gold_label and predicted_label_rnn == gold_label:
         #     rnn_right_ffnn_wrong[i].append(index)
         #     rnn_correct += 1
+        if int(predicted_label == gold_label) == 1:
+            correct_outputs[i].append(index)
+        else:
+            incorrect_outputs[i].append(index)
         correct += int(predicted_label == gold_label)
         total += 1
 
     print("Validation accuracy for model {}: {}".format(i, correct / total))
     # print("Validation accuracy for ffnn, batch {}: {}".format(i , correct / total))
+
+
 
 # rnn_average_distances = [average_sum/N for average_sum in rnn_average_dist]
 # ffnn_average_distances = [average_sum/N for average_sum in ffnn_average_dist]
