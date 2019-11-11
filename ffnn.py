@@ -151,7 +151,7 @@ def main(name, hidden_dim, number_of_epochs):
 		print("Validation accuracy for epoch {}: {}".format(epoch + 1, correct / total))
 		print("Validation time for this epoch: {}".format(time.time() - start_time))
 
-    current = os.curdir
-    models = os.path.join(current, 'models')
-    PATH = os.path.join(models, name + '.pt')
-    torch.save(model.state_dict(), PATH)
+	current = os.curdir
+	models = os.path.join(current, 'models')
+	PATH = os.path.join(models, name + '.pt')
+	torch.save(model.state_dict(), PATH)
