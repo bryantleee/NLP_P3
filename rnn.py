@@ -21,6 +21,9 @@ import adabound
 unk = '<UNK>'
 
 
+# New base settings: hidden=32, layers=1, epochs=10, embedding=64
+
+
 class RNN(nn.Module):
     def __init__(self, hidden_dim, n_layers, embedding_dim, output_dim):  # Add relevant parameters
         super(RNN, self).__init__()
@@ -28,27 +31,40 @@ class RNN(nn.Module):
         # Ensure parameters are initialized to small values, see PyTorch documentation for guidance
 
         self.hidden_dim = hidden_dim
-        self.n_layers = n_layers
-        self.rnn = nn.RNN(embedding_dim, hidden_dim, n_layers, batch_first=True)
+        # self.n_layers = n_layers
+        # self.rnn = nn.RNN(embedding_dim, hidden_dim, n_layers, batch_first=True)
         # self.lstm = nn.LSTM(embedding_dim, hidden_dim, n_layers, batch_first=True)
-        self.Linear = nn.Linear(hidden_dim, output_dim)
+        # self.Linear = nn.Linear(hidden_dim, output_dim)
         self.softmax = nn.LogSoftmax(dim=0)
         self.criterion = nn.NLLLoss()
+
+        self.W = nn.Linear(embedding_dim, hidden_dim)
+        self.U = nn.Linear(hidden_dim, hidden_dim)
+        self.V = nn.Linear(hidden_dim, output_dim)
 
     def compute_Loss(self, predicted_vector, gold_label):
         return self.criterion(predicted_vector, gold_label)
 
     def forward(self, inputs):
+        h = torch.zeros(self.hidden_dim)
+        for input_vector in inputs:
+            h = self.W(input_vector) + self.U(h)
+        output = self.V(h)
+        predicted_vector = self.softmax(output)
+
+
         # begin code
-        batch_size = inputs.size()[0]
-        h_0 = torch.zeros(self.n_layers, batch_size, self.hidden_dim)
-        output, _ = self.rnn(inputs, h_0)
+        # batch_size = inputs.size()[0]
+        # h_0 = torch.zeros(self.n_layers, batch_size, self.hidden_dim)
+        # output, h_n = self.rnn(inputs, h_0)
         # c_0 = h_0.clone()
         # output, _ = self.lstm(inputs)
 
-        distribution = self.Linear(output[0][-1])
+        # distribution = self.Linear(output[0][-1])
+        # predicted_vector = self.softmax(distribution)
+        # out = self.Linear(torch.squeeze(h_n))
+        # predicted_vector = self.softmax(out)
         # Remember to include the predicted unnormalized scores which should be normalized into a (log) probability distribution
-        predicted_vector = self.softmax(distribution)
         # end code
         return predicted_vector
 
@@ -56,20 +72,21 @@ class RNN(nn.Module):
 
 
 def main(name, embedding_dim, hidden_dim, n_layers, epochs, output_dim):  # Add relevant parameters
-
     # X_data is a list of pairs (document, y); y in {0,1,2,3,4}
     train_data, valid_data = fetch_data()
 
-    counts = Counter()
-    review_list = []
-    for t in train_data:
-        review_list.append(t[0])
-        counts.update(t[0])
-    for v in valid_data:
-        review_list.append(v[0])
-        counts.update(v[0])
+    # counts = Counter()
+    # review_list = []
+    # for t in train_data:
+    #     review_list.append(t[0])
+    #     counts.update(t[0])
+    # for v in valid_data:
+    #     review_list.append(v[0])
+    #     counts.update(v[0])
+    # model = Word2Vec(review_list, size=embedding_dim, min_count=1)
+    # model.save('word2vec.model')
 
-    model = Word2Vec(review_list, size=embedding_dim, min_count=1)
+    model = Word2Vec.load("word2vec.model")
 
     # create list of word embeddings for each review
     # reshape training data and validation data embeddings and tensorify
@@ -77,8 +94,9 @@ def main(name, embedding_dim, hidden_dim, n_layers, epochs, output_dim):  # Add 
     for t in train_data:
         embedding_list = [model.wv[word] for word in t[0]]
         stacked_embedding = np.stack(embedding_list, axis=0)
-        expanded_embedding = np.expand_dims(stacked_embedding, axis=0)
-        embedding_tensor = torch.from_numpy(expanded_embedding)
+        # expanded_embedding = np.expand_dims(stacked_embedding, axis=0)
+        # embedding_tensor = torch.from_numpy(expanded_embedding)
+        embedding_tensor = torch.from_numpy(stacked_embedding)
         train_sample = (embedding_tensor, t[1])
         training_samples.append(train_sample)
 
@@ -86,11 +104,11 @@ def main(name, embedding_dim, hidden_dim, n_layers, epochs, output_dim):  # Add 
     for v in valid_data:
         embedding_list = [model.wv[word] for word in v[0]]
         stacked_embedding = np.stack(embedding_list, axis=0)
-        expanded_embedding = np.expand_dims(stacked_embedding, axis=0)
-        embedding_tensor = torch.from_numpy(expanded_embedding)
+        # expanded_embedding = np.expand_dims(stacked_embedding, axis=0)
+        # embedding_tensor = torch.from_numpy(expanded_embedding)
+        embedding_tensor = torch.from_numpy(stacked_embedding)
         valid_sample = (embedding_tensor, t[1])
         validation_samples.append(valid_sample)
-
     # TODO: need to reshape embeddings for validation data too (reshaped_training must be built in the same way as reshaped_training)
     # TODO: also reshaped embeddings must become tuples with y labels attached to be able to shuffle later
     # so reshaped_training[0] = (tensor{document}, Ylabel)
@@ -106,7 +124,7 @@ def main(name, embedding_dim, hidden_dim, n_layers, epochs, output_dim):  # Add 
     # 3) You do the same as 2) but you train (this is called fine-tuning) the pretrained embeddings further.
     # Option 3 will be the most time consuming, so we do not recommend starting with this
 
-    optimizer = optim.SGD(model.parameters(), lr=0.0003, momentum=0.9)
+    optimizer = optim.SGD(model.parameters(), lr=0.3e-3, momentum=0.9)
     # optimizer = optim.Adam(model.parameters(), lr=0.0003)
     # optimizer = adabound.AdaBound(model.parameters(), lr=1e-3, final_lr=0.1)
     for epoch in range(epochs):
