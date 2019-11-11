@@ -120,8 +120,8 @@ for i, batch in enumerate(batches):
     for index in range(N):
         
         input_vector, gold_label = validation_samples[index]
-        if gold_label != 0 and gold_label != 4: 
-            continue
+        # if gold_label != 0 and gold_label != 4: 
+        #     continue
         
         predicted_vector_rnn = batch[0](input_vector)
         predicted_label_rnn = torch.argmax(predicted_vector_rnn)
