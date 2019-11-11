@@ -9,12 +9,10 @@ parser.add_argument('--embedding', type=int, default=64, help='Embedding dimensi
 parser.add_argument('--hidden', type=int, default=32, help='Hiddem dimension size')
 parser.add_argument('--layers', type=int, default=1, help='Number of hidden layers')
 parser.add_argument('--epochs', type=int, default=10, help='Number of training epochs')
-# parser.add_argument('--gpu', type=bool, default=False, help='Boolean value representing whether to run on GPU')
 
 args = parser.parse_args()
 
 def main():
-
     if args.model == 'RNN':
         rnn_main(args.name, args.embedding, args.hidden, args.layers, args.epochs)
     elif args.model == 'FFNN':
