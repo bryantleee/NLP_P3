@@ -12,7 +12,6 @@ from tqdm import tqdm
 from data_loader import fetch_data
 
 
-
 unk = '<UNK>'
 # Consult the PyTorch documentation for information on the functions used below:
 # https://pytorch.org/docs/stable/torch.html
@@ -21,9 +20,9 @@ class FFNN(nn.Module):
 			super(FFNN, self).__init__()
 			self.h = h
 			self.W1 = nn.Linear(input_dim, h)
-			self.W2 = nn.Linear(h, h)
+			# self.W2 = nn.Linear(h, h)
 			self.activation = nn.ReLU() # The rectified linear unit; one valid choice of activation function
-			self.W3 = nn.Linear(h, 5) # previously self.W2 = nn.Linear(h, h)
+			self.W2 = nn.Linear(h, 5) # previously self.W2 = nn.Linear(h, h)
 			# The below two lines are not a source for an error
 			self.softmax = nn.LogSoftmax() # The softmax function that converts vectors into probability distributions; computes log probabilities for computational benefits
 			self.loss = nn.NLLLoss() # The cross-entropy/negative log likelihood loss taught in class
@@ -35,8 +34,8 @@ class FFNN(nn.Module):
 		# The z_i are just there to record intermediary computations for your clarity
 		z1 = self.W1(input_vector)
 		z2 = self.W2(self.activation(z1)) #previously z2 = self.W2(z1)
-		z3 = self.W3(self.activation(z2))
-		predicted_vector = self.softmax(self.activation(z3))
+		# z3 = self.W3(self.activation(z2))
+		predicted_vector = self.softmax(self.activation(z2))
 		return predicted_vector
 
 
