@@ -9,7 +9,7 @@ parser.add_argument('--embedding', type=int, default=64, help='Embedding dimensi
 parser.add_argument('--hidden', type=int, default=32, help='Hiddem dimension size')
 parser.add_argument('--layers', type=int, default=1, help='Number of hidden layers')
 parser.add_argument('--epochs', type=int, default=10, help='Number of training epochs')
-parser.add_argument('--RNNcore', type=bool, default=True, help='Whether to use RNN as core or LSTM')
+parser.add_argument('--RNNcore', type=bool, default=False, help='Whether to use RNN as core or LSTM')
 
 args = parser.parse_args()
 
