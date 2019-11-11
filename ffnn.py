@@ -16,11 +16,13 @@ unk = '<UNK>'
 # Consult the PyTorch documentation for information on the functions used below:
 # https://pytorch.org/docs/stable/torch.html
 class FFNN(nn.Module):
-	def __init__(self, input_dim, h):
+	def __init__(self, input_dim, h, n_layers):
 			super(FFNN, self).__init__()
 			self.h = h
+			self.n_l = n_layers
 			self.W1 = nn.Linear(input_dim, h)
-			# self.W2 = nn.Linear(h, h)
+			if n_layers == 2:
+				self.W = nn.Linear(h, h)
 			self.activation = nn.ReLU() # The rectified linear unit; one valid choice of activation function
 			self.W2 = nn.Linear(h, 5) # previously self.W2 = nn.Linear(h, h)
 			# The below two lines are not a source for an error
@@ -31,6 +33,12 @@ class FFNN(nn.Module):
 		return self.loss(predicted_vector, gold_label)
 
 	def forward(self, input_vector):
+		if self.n_l == 2:
+			z1 = self.W1(input_vector)
+			z2 = self.W(self.activation(z1))
+			z3 = self.W2(self.activation(z2))
+			predicted_vector = self.softmax(self.activation(z3))
+			return predicted_vector
 		# The z_i are just there to record intermediary computations for your clarity
 		z1 = self.W1(input_vector)
 		z2 = self.W2(self.activation(z1)) #previously z2 = self.W2(z1)

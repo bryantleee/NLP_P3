@@ -16,7 +16,7 @@ def main():
     if args.model == 'RNN':
         rnn_main(args.name, args.embedding, args.hidden, args.layers, args.epochs)
     elif args.model == 'FFNN':
-        ffnn_main(args.name, hidden_dim=args.hidden, number_of_epochs=args.epochs)
+        ffnn_main(args.name, hidden_dim=args.hidden, number_of_epochs=args.epochs, n_layers=args.layers)
     else:
         print('Incompatible model declaration')
         return
