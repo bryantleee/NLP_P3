@@ -113,7 +113,7 @@ def main(name, embedding_dim, hidden_dim, n_layers, epochs):  # Add relevant par
     # TODO: also reshaped embeddings must become tuples with y labels attached to be able to shuffle later
     # so reshaped_training[0] = (tensor{document}, Ylabel)
 
-    model = RNN(hidden_dim, n_layers, embedding_dim, 5)  # Fill in parameters
+    model = RNN(hidden_dim, n_layers, embedding_dim)  # Fill in parameters
     # print(model(reshaped_training[0]))
 
     # Think about the type of function that an RNN describes. To apply it, you will need to convert the text data into vector representations.
