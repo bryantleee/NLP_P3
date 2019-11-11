@@ -31,39 +31,39 @@ class RNN(nn.Module):
         # Ensure parameters are initialized to small values, see PyTorch documentation for guidance
 
         self.hidden_dim = hidden_dim
-        # self.n_layers = n_layers
-        # self.rnn = nn.RNN(embedding_dim, hidden_dim, n_layers, batch_first=True)
+        self.n_layers = n_layers
+        self.rnn = nn.RNN(embedding_dim, hidden_dim, n_layers, batch_first=True)
         # self.lstm = nn.LSTM(embedding_dim, hidden_dim, n_layers, batch_first=True)
-        # self.Linear = nn.Linear(hidden_dim, 5)
+        self.Linear = nn.Linear(hidden_dim, 5)
         self.softmax = nn.LogSoftmax(dim=0)
         self.criterion = nn.NLLLoss()
 
-        self.W = nn.Linear(embedding_dim, hidden_dim)
-        self.U = nn.Linear(hidden_dim, hidden_dim)
-        self.V = nn.Linear(hidden_dim, 5)
+        # self.W = nn.Linear(embedding_dim, hidden_dim)
+        # self.U = nn.Linear(hidden_dim, hidden_dim)
+        # self.V = nn.Linear(hidden_dim, 5)
 
     def compute_Loss(self, predicted_vector, gold_label):
         return self.criterion(predicted_vector, gold_label)
 
     def forward(self, inputs):
-        h = torch.zeros(self.hidden_dim)
-        for input_vector in inputs:
-            h = self.W(input_vector) + self.U(h)
-        output = self.V(h)
-        predicted_vector = self.softmax(output)
+        # h = torch.zeros(self.hidden_dim)
+        # for input_vector in inputs:
+        #     h = self.W(input_vector) + self.U(h)
+        # output = self.V(h)
+        # predicted_vector = self.softmax(output)
 
 
         # begin code
-        # batch_size = inputs.size()[0]
-        # h_0 = torch.zeros(self.n_layers, batch_size, self.hidden_dim)
-        # output, h_n = self.rnn(inputs, h_0)
+        batch_size = inputs.size()[0]
+        h_0 = torch.zeros(self.n_layers, batch_size, self.hidden_dim)
+        output, h_n = self.rnn(inputs, h_0)
         # c_0 = h_0.clone()
         # output, _ = self.lstm(inputs)
 
         # distribution = self.Linear(output[0][-1])
         # predicted_vector = self.softmax(distribution)
-        # out = self.Linear(torch.squeeze(h_n))
-        # predicted_vector = self.softmax(out)
+        out = self.Linear(torch.squeeze(h_n))
+        predicted_vector = self.softmax(out)
         # Remember to include the predicted unnormalized scores which should be normalized into a (log) probability distribution
         # end code
         return predicted_vector
@@ -94,9 +94,9 @@ def main(name, embedding_dim, hidden_dim, n_layers, epochs):  # Add relevant par
     for t in train_data:
         embedding_list = [model.wv[word] for word in t[0]]
         stacked_embedding = np.stack(embedding_list, axis=0)
-        # expanded_embedding = np.expand_dims(stacked_embedding, axis=0)
-        # embedding_tensor = torch.from_numpy(expanded_embedding)
-        embedding_tensor = torch.from_numpy(stacked_embedding)
+        expanded_embedding = np.expand_dims(stacked_embedding, axis=0)
+        embedding_tensor = torch.from_numpy(expanded_embedding)
+        # embedding_tensor = torch.from_numpy(stacked_embedding)
         train_sample = (embedding_tensor, t[1])
         training_samples.append(train_sample)
 
@@ -104,9 +104,9 @@ def main(name, embedding_dim, hidden_dim, n_layers, epochs):  # Add relevant par
     for v in valid_data:
         embedding_list = [model.wv[word] for word in v[0]]
         stacked_embedding = np.stack(embedding_list, axis=0)
-        # expanded_embedding = np.expand_dims(stacked_embedding, axis=0)
-        # embedding_tensor = torch.from_numpy(expanded_embedding)
-        embedding_tensor = torch.from_numpy(stacked_embedding)
+        expanded_embedding = np.expand_dims(stacked_embedding, axis=0)
+        embedding_tensor = torch.from_numpy(expanded_embedding)
+        # embedding_tensor = torch.from_numpy(stacked_embedding)
         valid_sample = (embedding_tensor, t[1])
         validation_samples.append(valid_sample)
     # TODO: need to reshape embeddings for validation data too (reshaped_training must be built in the same way as reshaped_training)
