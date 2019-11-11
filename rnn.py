@@ -25,7 +25,7 @@ unk = '<UNK>'
 
 
 class RNN(nn.Module):
-    def __init__(self, hidden_dim, n_layers, embedding_dim, output_dim):  # Add relevant parameters
+    def __init__(self, hidden_dim, n_layers, embedding_dim):  # Add relevant parameters
         super(RNN, self).__init__()
         # Fill in relevant parameters
         # Ensure parameters are initialized to small values, see PyTorch documentation for guidance
@@ -34,13 +34,13 @@ class RNN(nn.Module):
         # self.n_layers = n_layers
         # self.rnn = nn.RNN(embedding_dim, hidden_dim, n_layers, batch_first=True)
         # self.lstm = nn.LSTM(embedding_dim, hidden_dim, n_layers, batch_first=True)
-        # self.Linear = nn.Linear(hidden_dim, output_dim)
+        # self.Linear = nn.Linear(hidden_dim, 5)
         self.softmax = nn.LogSoftmax(dim=0)
         self.criterion = nn.NLLLoss()
 
         self.W = nn.Linear(embedding_dim, hidden_dim)
         self.U = nn.Linear(hidden_dim, hidden_dim)
-        self.V = nn.Linear(hidden_dim, output_dim)
+        self.V = nn.Linear(hidden_dim, 5)
 
     def compute_Loss(self, predicted_vector, gold_label):
         return self.criterion(predicted_vector, gold_label)
@@ -71,7 +71,7 @@ class RNN(nn.Module):
 # You may find the functions make_vocab() and make_indices from ffnn.py useful; you are free to copy them directly (or call those functions from this file)
 
 
-def main(name, embedding_dim, hidden_dim, n_layers, epochs, output_dim):  # Add relevant parameters
+def main(name, embedding_dim, hidden_dim, n_layers, epochs):  # Add relevant parameters
     # X_data is a list of pairs (document, y); y in {0,1,2,3,4}
     train_data, valid_data = fetch_data()
 
@@ -113,8 +113,7 @@ def main(name, embedding_dim, hidden_dim, n_layers, epochs, output_dim):  # Add 
     # TODO: also reshaped embeddings must become tuples with y labels attached to be able to shuffle later
     # so reshaped_training[0] = (tensor{document}, Ylabel)
 
-    model = RNN(hidden_dim, n_layers, embedding_dim,
-                output_dim)  # Fill in parameters
+    model = RNN(hidden_dim, n_layers, embedding_dim, 5)  # Fill in parameters
     # print(model(reshaped_training[0]))
 
     # Think about the type of function that an RNN describes. To apply it, you will need to convert the text data into vector representations.

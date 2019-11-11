@@ -4,12 +4,11 @@ import argparse
 
 parser = argparse.ArgumentParser(description='Model and Parameter Selection')
 parser.add_argument('name', type=str, help='Name of the model for saving after training')
-parser.add_argument('--model', type=str, default='RNN', help='Model to run, either "RNN" or "FFNN"')
+parser.add_argument('model', type=str, help='Model to run, either "RNN" or "FFNN"')
 parser.add_argument('--embedding', type=int, default=64, help='Embedding dimension size')
 parser.add_argument('--hidden', type=int, default=32, help='Hiddem dimension size')
 parser.add_argument('--layers', type=int, default=1, help='Number of hidden layers')
 parser.add_argument('--epochs', type=int, default=10, help='Number of training epochs')
-parser.add_argument('--output', type=int, default=5, help='Output dimension size')
 # parser.add_argument('--gpu', type=bool, default=False, help='Boolean value representing whether to run on GPU')
 
 args = parser.parse_args()
@@ -17,11 +16,9 @@ args = parser.parse_args()
 def main():
 
     if args.model == 'RNN':
-        rnn_main(args.name, args.embedding, args.hidden, args.layers, args.epochs, args.output)
+        rnn_main(args.name, args.embedding, args.hidden, args.layers, args.epochs)
     elif args.model == 'FFNN':
-        hidden_dim = 32
-        number_of_epochs = 10
-        ffnn_main(hidden_dim=hidden_dim, number_of_epochs=number_of_epochs)
+        ffnn_main(args.name, hidden_dim=args.hidden, number_of_epochs=args.epochs)
     else:
         return 'Incompatible model declaration'
 

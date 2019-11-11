@@ -77,7 +77,7 @@ def convert_to_vector_representation(data, word2index):
 	return vectorized_data
 
 
-def main(hidden_dim, number_of_epochs):
+def main(name, hidden_dim, number_of_epochs):
 	print("Fetching data")
 	train_data, valid_data = fetch_data() # X_data is a list of pairs (document, y); y in {0,1,2,3,4}
 	vocab = make_vocab(train_data)
@@ -150,3 +150,8 @@ def main(hidden_dim, number_of_epochs):
 		print("Validation completed for epoch {}".format(epoch + 1))
 		print("Validation accuracy for epoch {}: {}".format(epoch + 1, correct / total))
 		print("Validation time for this epoch: {}".format(time.time() - start_time))
+
+    current = os.curdir
+    models = os.path.join(current, 'models')
+    PATH = os.path.join(models, name + '.pt')
+    torch.save(model.state_dict(), PATH)
