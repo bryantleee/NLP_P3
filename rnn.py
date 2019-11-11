@@ -13,17 +13,11 @@ from data_loader import fetch_data
 # Our stuff we imported
 from gensim.models import Word2Vec
 from collections import Counter
-import numpy as np
-import torch.backends.cudnn as cudnn
-import adabound
 
 
 unk = '<UNK>'
 
-
 # New base settings: hidden=32, layers=1, epochs=10, embedding=64
-# NOTE: adam, lstm on small network, adabound,
-
 
 class RNN(nn.Module):
     def __init__(self, hidden_dim, n_layers, embedding_dim, RNNcore):  # Add relevant parameters
@@ -66,8 +60,6 @@ class RNN(nn.Module):
 
         distribution = self.Linear(output[0][-1])
         predicted_vector = self.softmax(distribution)
-        # out = self.Linear(torch.squeeze(h_n))
-        # predicted_vector = self.softmax(out)
         # Remember to include the predicted unnormalized scores which should be normalized into a (log) probability distribution
         # end code
         return predicted_vector
@@ -127,11 +119,10 @@ def main(name, embedding_dim, hidden_dim, n_layers, epochs, RNNcore):  # Add rel
     # 3) You do the same as 2) but you train (this is called fine-tuning) the pretrained embeddings further.
     # Option 3 will be the most time consuming, so we do not recommend starting with this
 
-    # optimizer = optim.SGD(model.parameters(), lr=3e-3, momentum=0.9)
+    optimizer = optim.SGD(model.parameters(), lr=3e-3, momentum=0.9)
     # optimizer = optim.SGD(model.parameters(), lr=3e-4, momentum=0.9)
     # optimizer = optim.Adam(model.parameters(), lr=0.3e-3)
-    # optimizer = adabound.AdaBound(model.parameters(), lr=3e-4, final_lr=3e-3)
-    optimizer = optim.RMSprop(model.parameters(), lr=0.3e-3)
+    # optimizer = optim.RMSprop(model.parameters(), lr=0.3e-3)
     for epoch in range(epochs):
         model.train()
         optimizer.zero_grad()
@@ -168,11 +159,6 @@ def main(name, embedding_dim, hidden_dim, n_layers, epochs, RNNcore):  # Add rel
         start_time = time.time()
         print("Validation started for epoch {}".format(epoch + 1))
         random.shuffle(validation_samples) # Good practice to shuffle order of validation data
-        # minibatch_size = 16
-        # for minibatch_index in tqdm(range(N // minibatch_size)):
-        #     optimizer.zero_grad()
-        #     for example_index in range(minibatch_size):
-        #         input_vector, gold_label = validation_samples[minibatch_index * minibatch_size + example_index]
         N = len(validation_samples)
         optimizer.zero_grad()
         for index in tqdm(range(N)):
@@ -189,15 +175,3 @@ def main(name, embedding_dim, hidden_dim, n_layers, epochs, RNNcore):  # Add rel
     models = os.path.join(current, 'experimental_models')
     PATH = os.path.join(models, name + '.pt')
     torch.save(model.state_dict(), PATH)
-        # while not stopping_condition: # How will you decide to stop training and why
-        # 	optimizer.zero_grad()
-        # 	# You will need further code to operationalize training, ffnn.py may be helpful
-        #
-        # 	predicted_vector = model(input_vector)
-        # 	predicted_label = torch.argmax(predicted_vector)
-        # 	# You may find it beneficial to keep track of training accuracy or training loss;
-
-        # Think about how to update the model and what this entails. Consider ffnn.py and the PyTorch documentation for guidance
-
-        # You will need to validate your model. All results for Part 3 should be reported on the validation set.
-        # Consider ffnn.py; making changes to validation if you find them necessary
