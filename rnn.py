@@ -186,7 +186,7 @@ def main(name, embedding_dim, hidden_dim, n_layers, epochs, RNNcore):  # Add rel
         print("Validation time for this epoch: {}".format(time.time() - start_time))
 
     current = os.curdir
-    models = os.path.join(current, 'experimental_models')
+    models = os.path.join(current, 'models_part_a_2')
     PATH = os.path.join(models, name + '.pt')
     torch.save(model.state_dict(), PATH)
         # while not stopping_condition: # How will you decide to stop training and why
