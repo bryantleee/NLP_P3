@@ -60,10 +60,10 @@ class RNN(nn.Module):
         # c_0 = h_0.clone()
         # output, _ = self.lstm(inputs)
 
-        # distribution = self.Linear(output[0][-1])
-        # predicted_vector = self.softmax(distribution)
-        out = self.Linear(torch.squeeze(h_n))
-        predicted_vector = self.softmax(out)
+        distribution = self.Linear(output[0][-1])
+        predicted_vector = self.softmax(distribution)
+        # out = self.Linear(torch.squeeze(h_n))
+        # predicted_vector = self.softmax(out)
         # Remember to include the predicted unnormalized scores which should be normalized into a (log) probability distribution
         # end code
         return predicted_vector
@@ -123,7 +123,8 @@ def main(name, embedding_dim, hidden_dim, n_layers, epochs):  # Add relevant par
     # 3) You do the same as 2) but you train (this is called fine-tuning) the pretrained embeddings further.
     # Option 3 will be the most time consuming, so we do not recommend starting with this
 
-    optimizer = optim.SGD(model.parameters(), lr=0.3e-3, momentum=0.9)
+    optimizer = optim.SGD(model.parameters(), lr=3e-3, momentum=0.9)
+    # optimizer = optim.SGD(model.parameters(), lr=0.3e-3, momentum=0.9)
     # optimizer = optim.Adam(model.parameters(), lr=0.0003)
     # optimizer = adabound.AdaBound(model.parameters(), lr=1e-3, final_lr=0.1)
     for epoch in range(epochs):

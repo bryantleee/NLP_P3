@@ -22,7 +22,7 @@ class FFNN(nn.Module):
 			self.h = h
 			self.W1 = nn.Linear(input_dim, h)
 			self.activation = nn.ReLU() # The rectified linear unit; one valid choice of activation function
-			self.W2 = nn.Linear(h, 5) # error 1
+			self.W2 = nn.Linear(h, 5) # previously self.W2 = nn.Linear(h, h)
 			# The below two lines are not a source for an error
 			self.softmax = nn.LogSoftmax() # The softmax function that converts vectors into probability distributions; computes log probabilities for computational benefits
 			self.loss = nn.NLLLoss() # The cross-entropy/negative log likelihood loss taught in class
