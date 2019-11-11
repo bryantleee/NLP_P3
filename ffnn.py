@@ -20,11 +20,14 @@ class FFNN(nn.Module):
 			super(FFNN, self).__init__()
 			self.h = h
 			self.n_l = n_layers
-			self.W1 = nn.Linear(input_dim, h)
-			if n_layers == 2:
-				self.W = nn.Linear(h, h)
 			self.activation = nn.ReLU() # The rectified linear unit; one valid choice of activation function
-			self.W2 = nn.Linear(h, 5) # previously self.W2 = nn.Linear(h, h)
+			if n_layers == 1:
+				self.W1 = nn.Linear(input_dim, h)
+				self.W2 = nn.Linear(h, 5) # previously self.W2 = nn.Linear(h, h)
+			elif n_layers == 2:
+				self.W1 = nn.Linear(input_dim, h)
+				self.W2 = nn.Linear(h, h)
+				self.W3 = nn.Linear(h, 5)
 			# The below two lines are not a source for an error
 			self.softmax = nn.LogSoftmax(dim=0) # The softmax function that converts vectors into probability distributions; computes log probabilities for computational benefits
 			self.loss = nn.NLLLoss() # The cross-entropy/negative log likelihood loss taught in class
@@ -35,16 +38,17 @@ class FFNN(nn.Module):
 	def forward(self, input_vector):
 		if self.n_l == 2:
 			z1 = self.W1(input_vector)
-			z2 = self.W(self.activation(z1))
-			z3 = self.W2(self.activation(z2))
+			z2 = self.W2(self.activation(z1))
+			z3 = self.W3(self.activation(z2))
 			predicted_vector = self.softmax(self.activation(z3))
 			return predicted_vector
-		# The z_i are just there to record intermediary computations for your clarity
-		z1 = self.W1(input_vector)
-		z2 = self.W2(self.activation(z1)) #previously z2 = self.W2(z1)
-		# z3 = self.W3(self.activation(z2))
-		predicted_vector = self.softmax(self.activation(z2))
-		return predicted_vector
+		elif self.n_l == 1:
+			# The z_i are just there to record intermediary computations for your clarity
+			z1 = self.W1(input_vector)
+			z2 = self.W2(self.activation(z1)) #previously z2 = self.W2(z1)
+			# z3 = self.W3(self.activation(z2))
+			predicted_vector = self.softmax(self.activation(z2))
+			return predicted_vector
 
 
 # Returns:
@@ -95,7 +99,7 @@ def main(name, hidden_dim, number_of_epochs, n_layers):
 	train_data = convert_to_vector_representation(train_data, word2index)
 	valid_data = convert_to_vector_representation(valid_data, word2index)
 	print("Vectorized data")
-	model = FFNN(input_dim = len(vocab), h = hidden_dim, n_layers)
+	model = FFNN(len(vocab), hidden_dim, n_layers)
 	optimizer = optim.SGD(model.parameters(),lr=0.01, momentum=0.9)
 	print("Training for {} epochs".format(number_of_epochs))
 	for epoch in range(number_of_epochs):
