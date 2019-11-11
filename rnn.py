@@ -22,7 +22,7 @@ unk = '<UNK>'
 
 
 # New base settings: hidden=32, layers=1, epochs=10, embedding=64
-# NOTE: try non-linearity
+# NOTE: try non-linearity, lstm on small network, adam, adabound,
 
 
 class RNN(nn.Module):
@@ -52,7 +52,6 @@ class RNN(nn.Module):
         #     h = self.W(input_vector) + self.U(h)
         # output = self.V(h)
         # predicted_vector = self.softmax(output)
-
 
         # begin code
         batch_size = inputs.size()[0]
