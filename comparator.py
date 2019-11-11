@@ -16,6 +16,7 @@ from collections import Counter
 import numpy as np
 import torch.backends.cudnn as cudnn
 import adabound
+from collections import Counter
 
 from rnn import RNN
 from ffnn import FFNN, convert_to_vector_representation, make_indices, make_vocab
@@ -26,28 +27,27 @@ hx2 = ('rnn_sgd_hx2.pt', 'ffnn_sgd_hx2.pt')
 lx2 = ('rnn_sgd_lx2.pt', 'ffnn_sgd_lx2.pt')
 
 files = (base, hx2, lx2)
-
-
+directory = 'models_part_a/'
 base_models = []
 #RNN SGD BASE
-path = 'models/' + base[0]
+path = directory + base[0]
 model = RNN(32, 1, 64)
 model.load_state_dict(torch.load(path))
 base_models.append(model)
 #FFNN SGD BASE
-path = 'models/' + base[1]
+path = directory + base[1]
 model = FFNN(97305, 32, 1)
 model.load_state_dict(torch.load(path))
 base_models.append(model)
 
 hx2_models = []
 #RNN SGD hx2
-path = 'models/' + hx2[0]
+path = directory + hx2[0]
 model = RNN(64, 1, 64)
 model.load_state_dict(torch.load(path))
 hx2_models.append(model)
 #FFNN SGD hx2
-path = 'models/' + hx2[1]
+path = directory + hx2[1]
 model = FFNN(97305, 64, 1)
 model.load_state_dict(torch.load(path))
 hx2_models.append(model)
@@ -55,12 +55,12 @@ hx2_models.append(model)
 
 lx2_models = []
 #RNN SGD lx2
-path = 'models/' + lx2[0]
+path = directory + lx2[0]
 model = RNN(32, 2, 64)
 model.load_state_dict(torch.load(path))
 lx2_models.append(model)
 #FFNN SGD lx2
-path = 'models/' + lx2[1]
+path = directory + lx2[1]
 model = FFNN(97305, 32, 2)
 model.load_state_dict(torch.load(path))
 lx2_models.append(model)
@@ -108,8 +108,12 @@ batches = (base_models, hx2_models, lx2_models)
 
 N = len(validation_samples)
 
+# review_counter = Counter()
 
 print('starting validation counts')
+
+rnn_average_dist = [[], [], []]
+ffnn_average_dist = [[], [], []]
 
 for i, batch in enumerate(batches): 
     total = 0
@@ -124,7 +128,12 @@ for i, batch in enumerate(batches):
         input_vector, gold_label = valid_data[index] 
         
         predicted_vector_ffnn = batch[1](input_vector)
-        predicted_label_ffnn = torch.argmax(predicted_vector_ffnn)        
+        predicted_label_ffnn = torch.argmax(predicted_vector_ffnn)         
+
+        # review_counter.update(gold_label)
+
+        rnn_average_dist[i] += abs(gold_label - predicted_label_rnn.item())
+        ffnn_average_dist[i] += abs(gold_label - predicted_label_ffnn.item())
 
         if predicted_label_ffnn == gold_label and predicted_label_rnn == gold_label:
             both_right[i].append(index)
@@ -143,7 +152,15 @@ for i, batch in enumerate(batches):
     print("Validation accuracy for rnn, batch {}: {}".format(i, rnn_correct / total))
     print("Validation accuracy for ffnn, batch {}: {}".format(i , ffnn_correct / total))
   
-# output_lists = (both_right, ffnn_right_rnn_wrong, rnn_right_ffnn_wrong)
+rnn_average_distances = [average_sum/N for average_sum in rnn_average_dist]
+ffnn_average_distances = [average_sum/N for average_sum in ffnn_average_dist]
+
+print('RNN AVG DISTANCES:', rnn_average_distances)
+print('FFNN AVG DISTANCES:', ffnn_average_distances)
+
+
+for i, average_sum in enumerate(rnn_average_dist):
+    rnn_average_dist[i] = average_sum/N
 
 for i, batch in enumerate(both_right):
     both_right[i] = list(map(str, both_right[i]))
@@ -153,36 +170,32 @@ for i, batch in enumerate(both_right):
     rnn_right_ffnn_wrong[i] = list(map(str, rnn_right_ffnn_wrong[i]))
 
 with open("comparator_outputs/base.txt","w+") as f:
-    f.write('both correct: \n')
+    f.write('both correct: \n\n')
     f.write( ", ".join(both_right[0]))
 
-    f.write('RNN correct: \n')
+    f.write('\nRNN correct: \n\n')
     f.write( ", ".join(rnn_right_ffnn_wrong[0]))
 
-    f.write('FFNN correct: \n')
+    f.write('\nFFNN correct: \n\n')
     f.write( ", ".join(ffnn_right_rnn_wrong[0]))
 
 
 with open("comparator_outputs/hx2.txt","w+") as f:
-    f.write('both correct: \n')
+    f.write('both correct: \n\n')
     f.write( ", ".join(both_right[1]))
 
-    f.write('RNN correct: \n')
+    f.write('\nRNN correct: \n\n')
     f.write( ", ".join(rnn_right_ffnn_wrong[1]))
 
-    f.write('FFNN correct: \n')
+    f.write('\nFFNN correct: \n\n')
     f.write( ", ".join(ffnn_right_rnn_wrong[1]))
 
 with open("comparator_outputs/lx2.txt","w+") as f:
-    f.write('both correct: \n')
+    f.write('both correct: \n\n')
     f.write( ", ".join(both_right[2]))
 
-    f.write('RNN correct: \n')
+    f.write('\nRNN correct: \n\n')
     f.write( ", ".join(rnn_right_ffnn_wrong[2]))
 
-    f.write('FFNN correct: \n')
+    f.write('\nFFNN correct: \n\n')
     f.write( ", ".join(ffnn_right_rnn_wrong[2]))
-
-
-# print('Validation accuracy completed for', files[i])
-# print("Validation accuracy for epoch {}: {}".format(10 + 1,  / ))
