@@ -127,11 +127,11 @@ def main(name, embedding_dim, hidden_dim, n_layers, epochs, RNNcore):  # Add rel
     # 3) You do the same as 2) but you train (this is called fine-tuning) the pretrained embeddings further.
     # Option 3 will be the most time consuming, so we do not recommend starting with this
 
-    # optimizer = optim.SGD(model.parameters(), lr=3e-3, momentum=0.9)
+    optimizer = optim.SGD(model.parameters(), lr=3e-3, momentum=0.9)
     # optimizer = optim.SGD(model.parameters(), lr=3e-4, momentum=0.9)
     # optimizer = optim.Adam(model.parameters(), lr=0.3e-3)
     # optimizer = adabound.AdaBound(model.parameters(), lr=3e-4, final_lr=3e-3)
-    optimizer = optim.RMSprop(model.parameters(), lr=0.3e-4)
+    # optimizer = optim.RMSprop(model.parameters(), lr=0.3e-4)
     for epoch in range(epochs):
         model.train()
         optimizer.zero_grad()
