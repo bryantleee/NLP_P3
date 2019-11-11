@@ -22,7 +22,7 @@ unk = '<UNK>'
 
 
 # New base settings: hidden=32, layers=1, epochs=10, embedding=64
-# NOTE: try non-linearity, lstm on small network, adam, adabound,
+# NOTE: adam, lstm on small network, adabound,
 
 
 class RNN(nn.Module):
@@ -33,8 +33,8 @@ class RNN(nn.Module):
 
         self.hidden_dim = hidden_dim
         self.n_layers = n_layers
-        self.rnn = nn.RNN(embedding_dim, hidden_dim, n_layers, batch_first=True)
-        # self.lstm = nn.LSTM(embedding_dim, hidden_dim, n_layers, batch_first=True)
+        # self.rnn = nn.RNN(embedding_dim, hidden_dim, n_layers, batch_first=True)
+        self.lstm = nn.LSTM(embedding_dim, hidden_dim, n_layers, batch_first=True)
         self.Linear = nn.Linear(hidden_dim, 5)
         self.softmax = nn.LogSoftmax(dim=0)
         self.criterion = nn.NLLLoss()
@@ -56,9 +56,9 @@ class RNN(nn.Module):
         # begin code
         batch_size = inputs.size()[0]
         h_0 = torch.zeros(self.n_layers, batch_size, self.hidden_dim)
-        output, h_n = self.rnn(inputs, h_0)
-        # c_0 = h_0.clone()
-        # output, _ = self.lstm(inputs)
+        # output, h_n = self.rnn(inputs, h_0)
+        c_0 = h_0.clone()
+        output, h_n = self.lstm(inputs, (h_0, c_0))
 
         distribution = self.Linear(output[0][-1])
         predicted_vector = self.softmax(distribution)
@@ -124,9 +124,10 @@ def main(name, embedding_dim, hidden_dim, n_layers, epochs):  # Add relevant par
     # Option 3 will be the most time consuming, so we do not recommend starting with this
 
     optimizer = optim.SGD(model.parameters(), lr=3e-3, momentum=0.9)
-    # optimizer = optim.SGD(model.parameters(), lr=0.3e-3, momentum=0.9)
-    # optimizer = optim.Adam(model.parameters(), lr=0.0003)
-    # optimizer = adabound.AdaBound(model.parameters(), lr=1e-3, final_lr=0.1)
+    # optimizer = optim.SGD(model.parameters(), lr=3e-3, momentum=0.9)
+    # optimizer = optim.Adam(model.parameters(), lr=0.3e-3)
+    # optimizer = adabound.AdaBound(model.parameters(), lr=3e-4, final_lr=3e-3)
+    # optimizer = optim.RMSprop(model.parameters(), lr=0.3e-3)
     for epoch in range(epochs):
         model.train()
         optimizer.zero_grad()
@@ -181,7 +182,7 @@ def main(name, embedding_dim, hidden_dim, n_layers, epochs):  # Add relevant par
         print("Validation time for this epoch: {}".format(time.time() - start_time))
 
     current = os.curdir
-    models = os.path.join(current, 'models')
+    models = os.path.join(current, 'experimental_models')
     PATH = os.path.join(models, name + '.pt')
     torch.save(model.state_dict(), PATH)
         # while not stopping_condition: # How will you decide to stop training and why

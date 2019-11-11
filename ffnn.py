@@ -86,7 +86,7 @@ def convert_to_vector_representation(data, word2index):
 	return vectorized_data
 
 
-def main(name, hidden_dim, number_of_epochs):
+def main(name, hidden_dim, number_of_epochs, n_layers):
 	print("Fetching data")
 	train_data, valid_data = fetch_data() # X_data is a list of pairs (document, y); y in {0,1,2,3,4}
 	vocab = make_vocab(train_data)
@@ -95,7 +95,7 @@ def main(name, hidden_dim, number_of_epochs):
 	train_data = convert_to_vector_representation(train_data, word2index)
 	valid_data = convert_to_vector_representation(valid_data, word2index)
 	print("Vectorized data")
-	model = FFNN(input_dim = len(vocab), h = hidden_dim)
+	model = FFNN(input_dim = len(vocab), h = hidden_dim, n_layers)
 	optimizer = optim.SGD(model.parameters(),lr=0.01, momentum=0.9)
 	print("Training for {} epochs".format(number_of_epochs))
 	for epoch in range(number_of_epochs):
